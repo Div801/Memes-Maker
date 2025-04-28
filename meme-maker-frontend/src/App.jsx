@@ -5,6 +5,8 @@ function App() {
   const [caption, setCaption] = useState("");
   const [memes, setMemes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,17 +36,37 @@ function App() {
 
   const fetchMemes = async (query = "") => {
     try {
+      setIsLoading(true); // start spinner
       const res = await fetch(`http://localhost:5000/api/memes?search=${query}`);
       const data = await res.json();
       setMemes(data);
     } catch (err) {
       console.error("Failed to load memes", err);
+    } finally {
+      setIsLoading(false); // stop spinner
     }
   };
+  
 
   useEffect(() => {
     fetchMemes();
   }, []);
+
+  const deleteMeme = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this meme?")) return;
+  
+    try {
+      await fetch(`http://localhost:5000/api/memes/${id}`, {
+        method: "DELETE",
+      });
+      alert("🗑️ Meme deleted!");
+      fetchMemes(); // reload memes after deleting
+    } catch (err) {
+      alert("❌ Failed to delete meme!");
+      console.error(err);
+    }
+  };
+  
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -121,29 +143,51 @@ function App() {
         </button>
       </form>
 
-      {/* Meme List */}
-      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {memes.map((meme) => (
-          <div
-            key={meme._id}
-            className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition"
-          >
-            <img
-              src={meme.imageUrl}
-              alt="meme"
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4">
-              <p className="text-lg font-semibold text-gray-700">
-                {meme.topText}
-              </p>
-              <p className="text-sm text-gray-500">
-                {new Date(meme.createdAt).toLocaleString()}
-              </p>
-            </div>
-          </div>
-        ))}
+      {isLoading && (
+  <div className="text-center text-blue-500 font-bold text-xl mb-1">
+    ⏳ Loading memes...
+  </div>
+)}
+
+{/* meme list */}
+<div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {memes.map((meme) => (
+    <div
+      key={meme._id}
+      className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg transition relative"
+    >
+      <img
+        src={meme.imageUrl}
+        alt="meme"
+        className="w-full h-64 object-cover"
+      />
+      <div className="p-4">
+        <p className="text-lg font-semibold text-gray-700">
+          {meme.topText}
+        </p>
+        <p className="text-sm text-gray-500">
+          {new Date(meme.createdAt).toLocaleString()}
+        </p>
+
+        {/* Delete Button */}
+        <button
+  onClick={() => {
+    if (window.confirm("Are you sure you want to delete this meme? ")) {
+      deleteMeme(meme._id);
+    }
+  }}
+  className="absolute top-2 right-2 bg-blue-50 hover:bg-red-500 text-white p-2 rounded-full shadow-md text-sm"
+>
+🗑️ 
+</button>
+
+
+
       </div>
+    </div>
+  ))}
+</div>
+
     </div>
   );
 }
