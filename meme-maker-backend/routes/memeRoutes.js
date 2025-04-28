@@ -71,4 +71,42 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// PATCH: Edit meme (update caption)
+router.patch('/:id', async (req, res) => {
+  try {
+    const { caption } = req.body; //receive 'caption'
+    const updatedMeme = await Meme.findByIdAndUpdate(
+      req.params.id,
+      { topText: caption }, // update topText with new caption
+      { new: true }
+    );
+    res.json(updatedMeme);
+  } catch (err) {
+    res.status(500).json({ error: '💥 Meme edit failed' });
+  }
+});
+
+
+
+
+// PATCH: Like a meme
+router.patch('/:id/like', async (req, res) => {
+  try {
+    const meme = await Meme.findById(req.params.id);
+
+    if (!meme) {
+      return res.status(404).json({ error: "Meme not found" });
+    }
+
+    meme.likes += 1;
+    await meme.save();
+
+    res.json(meme);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: '💥 Failed to like meme' });
+  }
+});
+
+
 module.exports = router;
