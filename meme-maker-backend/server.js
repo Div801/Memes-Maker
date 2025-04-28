@@ -12,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/memes', require('./routes/memeRoutes'));
+app.use('/api/auth', require('./routes/authRoutes')); 
 
 // Connect to MongoDB – your meme warehouse
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
